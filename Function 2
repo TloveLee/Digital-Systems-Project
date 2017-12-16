@@ -1,0 +1,300 @@
+//////////////////////////////////////////////////////////////////////////////////
+// Students: Lishen Tong & Jiaxi Li 
+// 
+// 
+// Create Date:    23:07:00 04/25/2017 
+// Design Name: 
+// Module Name:    Function2 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module Function2(
+input wire sin,
+input wire auto,
+input wire rotate,
+input wire forward,
+input wire backward,
+input wire toggle,
+input wire sysclk,
+output reg hs_F2 = 1'b1,
+output reg vs_F2= 1'b1,
+output reg rout_F2 = 1'b0,
+output reg gout_F2 = 1'b0,
+output reg bout_F2 = 1'b0,
+output reg [7:0]x = 0
+);
+wire backward_flag;
+wire forward_flag;
+wire rotate_flag;
+wire toggle_flag;
+wire count;
+wire [2:0]normal;
+wire [2:0]left;
+wire [2:0]back;
+wire [2:0]right;
+reg sysclkout=0;
+
+//Clock divider//
+always @(posedge sysclk)
+begin
+sysclkout = ~sysclkout;
+end
+
+//Call the function account for auto running//
+account a(
+.sysclkout1(sysclkout),
+.count(count)
+);
+
+//Call the function datarom to read different value of data//
+datarom rom( 
+.data(normal),
+.data1(left),
+.data2(back),
+.data3(right),
+.addr(x)
+);
+
+reg [9:0] hs_cnt = 10'b0;
+reg [9:0] vs_cnt = 10'b0;
+reg valid =0;
+reg enable = 0;
+reg c = 0;
+reg [4:0] n = 5'b0; 
+reg [4:0] m = 5'b0;
+reg [2:0] VGR;
+reg [1:0]Z = 0;
+reg [1:0]S = 0;
+reg reader = 0;
+parameter hpixels = 10'd800;
+parameter vlines  = 10'd525;
+parameter hfp = 10'd784;
+parameter hbp = 10'd144;
+parameter vfp = 10'd515;
+parameter vbp = 10'd35;
+
+
+
+debouncer_backward debouncer_backward
+(.backward(backward),.sysclk(sysclk),.backward_flag(backward_flag));
+
+debouncer_forward debouncer_forward
+(.forward(forward),.sysclk(sysclk),.forward_flag(forward_flag));
+
+debouncer_rotate debouncer_rotate
+(.rotate(rotate),.sysclk(sysclk),.rotate_flag(rotate_flag));
+
+debouncer_toggle debouncer_toggle
+(.toggle(toggle),.sysclk(sysclk),.toggle_flag(toggle_flag));
+
+always@(*)begin
+if(sin == 1)
+enable = 1'b1;
+else
+enable = 0;
+end
+
+//If the auto switch is turned on, the value of c will change//
+always@(posedge sysclkout)begin
+if (auto == 1)
+ c <= count;
+else c <= 0;
+end
+
+//Count the horizental time//
+always @(posedge sysclkout)begin
+if(enable == 1)begin
+if(hs_cnt == (hpixels-1))  
+hs_cnt <= 0; 
+else 
+hs_cnt <= hs_cnt + 1'b1;
+end
+else
+hs_cnt <= 0;
+end
+
+//Calculate the value of HS//
+always@(posedge sysclkout)begin
+if(hs_cnt > 95 || enable == 0)
+hs_F2 <= 1'b1;
+else
+hs_F2 <= 1'b0;
+end
+
+//Count the vertical time//
+always@(posedge sysclkout)begin
+if(enable == 1)begin
+  if(hs_cnt == (hpixels-1))
+  vs_cnt <= vs_cnt + 1'b1;
+  else if(vs_cnt == (vlines-1))
+  vs_cnt <= 1'b0;
+  end
+else
+  vs_cnt <= 0;
+  end
+
+//Calculate the value of VS// 
+always@(posedge sysclkout)begin
+if(vs_cnt > 1 || enable ==0)
+vs_F2 <= 1'b1;
+else
+vs_F2 <= 1'b0;
+end
+
+//Determine the display time//
+always@(posedge sysclkout)begin
+if((hs_cnt > 143) && (hs_cnt <= 783) && (vs_cnt > 34) && (vs_cnt <= 514))
+valid <= 1'b1;
+else
+valid <= 0;
+end
+
+//Divided the 256 girds to 16*16 square//
+always@(*)begin
+ if(hs_cnt>223&&hs_cnt<=253)
+    n =5'd1;
+else if(hs_cnt>253&&hs_cnt<=283)
+    n =5'd2;
+else if(hs_cnt>283&&hs_cnt<=313)
+    n =5'd3;
+else if(hs_cnt>313&&hs_cnt<=343)
+    n =5'd4;
+else if(hs_cnt>343&&hs_cnt<=373)
+    n =5'd5;
+else if(hs_cnt>373&&hs_cnt<=403)
+    n =5'd6;
+else if(hs_cnt>403&&hs_cnt<=433)
+    n =5'd7;
+else if(hs_cnt>433&&hs_cnt<=463)
+    n =5'd8;
+else if(hs_cnt>463&&hs_cnt<=493)
+    n =5'd9;
+else if(hs_cnt>493&&hs_cnt<=523)
+    n =5'd10;
+else if(hs_cnt>523&&hs_cnt<=553)
+    n =5'd11;
+else if(hs_cnt>553&&hs_cnt<=583)
+    n =5'd12;
+else if(hs_cnt>583&&hs_cnt<=613)
+    n =5'd13;
+else if(hs_cnt>613&&hs_cnt<=643)
+    n =5'd14;
+else if(hs_cnt>643&&hs_cnt<=673)
+    n =5'd15;
+else if(hs_cnt>673&&hs_cnt<=703)
+    n =5'd16;
+else
+    n = 0;
+end
+
+always@(*)begin
+if(vs_cnt>34&&vs_cnt<65)
+    m =5'd1;
+else if(vs_cnt>64&&vs_cnt<95)
+    m =5'd2;
+else if(vs_cnt>94&&vs_cnt<125)
+    m =5'd3;
+else if(vs_cnt>124&&vs_cnt<155)
+    m =5'd4;
+else if(vs_cnt>154&&vs_cnt<185)
+    m =5'd5;
+else if(vs_cnt>184&&vs_cnt<215)
+    m =5'd6;
+else if(vs_cnt>214&&vs_cnt<245)
+    m =5'd7;
+else if(vs_cnt>244&&vs_cnt<275)
+    m =5'd8;
+else if(vs_cnt>274&&vs_cnt<305)
+    m =5'd9;
+else if(vs_cnt>304&&vs_cnt<335)
+    m =5'd10;
+else if(vs_cnt>334&&vs_cnt<365)
+    m =5'd11;
+else if(vs_cnt>364&&vs_cnt<395)
+    m =5'd12;
+else if(vs_cnt>394&&vs_cnt<425)
+    m =5'd13;
+else if(vs_cnt>424&&vs_cnt<455)
+    m =5'd14;
+else if(vs_cnt>454&&vs_cnt<485)
+    m =5'd15;
+else if(vs_cnt>484&&vs_cnt<515)
+    m =5'd16;
+	 else
+	 m = 0;
+end
+	
+//If push rotate button, the value of Z will be changed//	
+always@(posedge sysclkout)begin
+if(rotate_flag == 1)
+Z <= Z + 1;
+end
+
+always@(*)begin
+if(Z == 4)
+Z = 0;
+end
+
+//If push rotate button or turn on the auto switch, the value of S will be changed//	
+always@(posedge sysclkout)begin
+if(c == 1)
+S <= S + 1;
+else if(forward_flag == 1)
+S <= S + 1;
+else if(backward_flag == 1)
+S <= S - 1;
+else
+S <= S;
+end
+
+//If push toggle button, the value of reader will be inversed//	
+always@(posedge sysclkout)begin
+if(toggle_flag == 1)
+reader <=~ reader;
+end
+
+//For different value of Z, it will has diffrent calculation of address//
+always@(posedge sysclkout) begin
+case(Z)
+2'd0: x <= (m-1)*16 + (n-1);
+2'd1: x <= n*16-m ;
+2'd2: x <= (16-m)*16 + (16-n);
+2'd3: x <= (16-n)*16 + (m-1);
+default: x <= 0;
+endcase
+end
+
+//For different value of S, it will read different data//
+always@(posedge sysclkout)begin
+case(S)
+2'd0 : VGR <= normal;
+2'd1 : VGR <= left;
+2'd2 : VGR <= back;
+2'd3 : VGR <= right;
+default: VGR <= 3'b0;
+endcase
+end 
+
+//For different case of reader, it will display different output//
+always@(posedge sysclkout)begin
+if(reader == 0) begin
+rout_F2 <= VGR[2]&valid;
+gout_F2 <= VGR[1]&valid;
+bout_F2 <= VGR[0]&valid;
+end
+else begin
+rout_F2 <= ~VGR[2]&valid;
+gout_F2 <= ~VGR[1]&valid;
+bout_F2 <= ~VGR[0]&valid;
+end
+end
+endmodule
