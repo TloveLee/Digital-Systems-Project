@@ -1,0 +1,151 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Students: Lishen Tong & Jiaxi Li 
+//
+// 
+// Create Date:    01:47:30 04/24/2017 
+// Design Name: 
+// Module Name:    Function1
+// Project Name:   ENGN3213
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module Function1 (
+input wire sysclk,
+input wire set,
+input wire rin,
+input wire gin,
+input wire bin,
+input wire sin,
+output reg hs_F1 = 1'b1,
+output reg vs_F1 = 1'b1,
+output reg rout_F1 = 1'b0,
+output reg gout_F1 = 1'b0,
+output reg bout_F1 = 1'b0
+);
+wire set_flag;
+reg [9:0] hs_cnt = 10'b0;
+reg [9:0] vs_cnt = 10'b0;
+reg valid =0;
+reg enable = 0;
+reg sysclkout=0;
+reg [2:0] reader = 3'b000;
+reg [2:0] VGR = 3'b000;
+parameter hpixels = 10'd800;
+parameter vlines  = 10'd525;
+parameter hfp = 10'd784;
+parameter hbp = 10'd144;
+parameter vfp = 10'd515;
+parameter vbp = 10'd35;
+
+debouncer_set debouncer_set
+(.set(set),.sysclk(sysclk),.set_flag(set_flag));
+
+//Clock divider//
+always @(posedge sysclk)
+begin
+sysclkout = ~sysclkout;
+end
+
+always@(posedge sysclkout)begin
+if(sin == 1)
+enable <= 1'b1;
+else
+enable <= 0;
+end
+
+//Count the horizental time//
+always @(posedge sysclkout)begin
+if(enable == 1) begin
+  if(hs_cnt == (hpixels-1))  
+  hs_cnt <= 0; 
+  else 
+  hs_cnt <= hs_cnt + 1'b1;
+  end
+else
+  hs_cnt <=0;
+end
+
+//Caculate the HS value//
+always@(posedge sysclkout)begin
+if(hs_cnt > 95 || enable == 0)
+hs_F1 <= 1'b1;
+else
+hs_F1 <= 1'b0;
+end
+
+//Count the vertical time//
+always@(posedge sysclkout)begin
+if(enable == 1)begin
+  if(hs_cnt == (hpixels-1))
+  vs_cnt <= vs_cnt + 1'b1;
+  else if(vs_cnt == (vlines-1))
+  vs_cnt <= 1'b0;
+  end
+else
+  vs_cnt <= 0;
+  end
+
+//Calculate the VS value//
+always@(posedge sysclkout)begin
+if(vs_cnt > 1 || enable ==0)
+vs_F1 <= 1'b1;
+else
+vs_F1 <= 1'b0;
+end
+
+//Determine the display time//
+always@(posedge sysclkout)begin
+if((hs_cnt > (hbp-1)) && (hs_cnt <= (hfp-1)) && (vs_cnt > (vbp-1)) && (vs_cnt <= (vfp-1)))
+valid <= 1'b1;
+else
+valid <= 0;
+end
+
+//Using set button to store the input into a buffer//
+always@(posedge sysclkout)begin
+if (set_flag ==1) begin
+reader[2] <= rin;
+reader[1] <= gin;
+reader[0] <= bin;
+end
+end
+
+//read the value in display time//
+always@(*)begin
+if(valid == 1) 
+case(reader)
+3'd0:VGR = 3'b000;
+3'd1:VGR = 3'b001;
+3'd2:VGR = 3'b010;
+3'd3:VGR = 3'b011;
+3'd4:VGR = 3'b100;
+3'd5:VGR = 3'b101;
+3'd6:VGR = 3'b110;
+3'd7:VGR = 3'b111;
+default: VGR = 3'b000;
+endcase
+else
+VGR = 3'b000;
+end
+
+//Put VGR into output and it will display color in the screen//
+always@(posedge sysclkout)begin
+rout_F1 <= VGR[2];
+gout_F1 <= VGR[1];
+bout_F1 <= VGR[0];
+end
+endmodule
+
+
+
+
+
