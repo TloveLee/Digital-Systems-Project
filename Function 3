@@ -1,0 +1,332 @@
+//////////////////////////////////////////////////////////////////////////////////
+// Students: Lishen Tong & Jiaxi Li 
+//  
+// 
+// Create Date:    23:07:00 04/25/2017 
+// Design Name: 
+// Module Name:    Function3 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module Function3(
+input wire reset,
+input wire sin,
+//input wire Scramble,
+input wire Up,
+input wire Right,
+input wire Left,
+input wire Down,
+input wire sysclk,
+output reg hs_F3 = 1'b1,
+output reg vs_F3 = 1'b1,
+output reg rout_F3 = 1'b0,
+output reg gout_F3 = 1'b0,
+output reg bout_F3 = 1'b0,
+output reg [7:0]x = 0
+);
+wire Up_flag;
+wire Right_flag;
+wire Left_flag;
+wire Down_flag;
+wire count;
+wire [2:0]normal;
+wire [2:0]compare;
+reg sysclkout=0;
+
+always @(posedge sysclk)
+begin
+sysclkout = ~sysclkout;
+end
+
+count count1(
+.sysclkout1(sysclkout),
+.count(count)
+);
+
+rom rom1( 
+.data(normal),
+.data1(compare),
+.addr(x)
+);
+
+reg [9:0] hs_cnt = 10'b0;
+reg [9:0] vs_cnt = 10'b0;
+reg valid =0;
+reg enable = 0;
+reg c = 0;
+reg [3:0] n = 5'b0; 
+reg [3:0] m = 5'b0;
+reg [2:0] VGR;
+reg [7:0] xy;
+//reg reader = 0;
+reg [3:0] nx = 5'd6; 
+reg [3:0] mx = 5'd9;
+parameter hpixels = 10'd800;
+parameter vlines  = 10'd525;
+parameter hfp = 10'd784;
+parameter hbp = 10'd144;
+parameter vfp = 10'd515;
+parameter vbp = 10'd35;
+
+debouncer_Right debouncer_Right
+(.Right(Right),.sysclk(sysclk),.Right_flag(Right_flag));
+
+debouncer_Left debouncer_Left
+(.Left(Left),.sysclk(sysclk),.Left_flag(Left_flag));
+
+debouncer_Up debouncer_Up
+(.Up(Up),.sysclk(sysclk),.Up_flag(Up_flag));
+
+debouncer_Down debouncer_Down
+(.Down(Down),.sysclk(sysclk),.Down_flag(Down_flag));
+
+always@(*)begin
+c = count;
+end
+always@(*)begin
+if(sin == 1)
+enable = 1'b1;
+else
+enable = 0;
+end
+
+//always@(posedge sysclkout)begin
+// c <= count;
+//end
+
+//Count the horizental time//
+always @(posedge sysclkout)begin
+if(enable == 1)begin
+if(hs_cnt == (hpixels-1))  
+hs_cnt <= 0; 
+else 
+hs_cnt <= hs_cnt + 1'b1;
+end
+else
+hs_cnt <= 0;
+end
+
+//Calculate the HS value//
+always@(posedge sysclkout)begin
+if(hs_cnt > 95 || enable == 0)
+hs_F3 <= 1'b1;
+else
+hs_F3 <= 1'b0;
+end
+
+//Count the vertical time//
+always@(posedge sysclkout)begin
+if(enable == 1)begin
+  if(hs_cnt == (hpixels-1))
+  vs_cnt <= vs_cnt + 1'b1;
+  else if(vs_cnt == (vlines-1))
+  vs_cnt <= 1'b0;
+  end
+else
+  vs_cnt <= 0;
+  end
+  
+//Calculate the VS value//
+always@(posedge sysclkout)begin
+if(vs_cnt > 1 || enable ==0)
+vs_F3 <= 1'b1;
+else
+vs_F3 <= 1'b0;
+end
+
+//Determine the display time//
+always@(posedge sysclkout)begin
+if((hs_cnt >= hbp) && (hs_cnt <= (hfp-1)) && (vs_cnt >= vbp) && (vs_cnt <= (vfp-1)))
+valid <= 1'b1;
+else
+valid <= 0;
+end
+
+//Dividle 256 grids into 16*16 square//
+always@(*)begin
+ if(hs_cnt>223&&hs_cnt<=253)
+    n =5'd0;
+else if(hs_cnt>253&&hs_cnt<=283)
+    n =5'd1;
+else if(hs_cnt>283&&hs_cnt<=313)
+    n =5'd2;
+else if(hs_cnt>313&&hs_cnt<=343)
+    n =5'd3;
+else if(hs_cnt>343&&hs_cnt<=373)
+    n =5'd4;
+else if(hs_cnt>373&&hs_cnt<=403)
+    n =5'd5;
+else if(hs_cnt>403&&hs_cnt<=433)
+    n =5'd6;
+else if(hs_cnt>433&&hs_cnt<=463)
+    n =5'd7;
+else if(hs_cnt>463&&hs_cnt<=493)
+    n =5'd8;
+else if(hs_cnt>493&&hs_cnt<=523)
+    n =5'd9;
+else if(hs_cnt>523&&hs_cnt<=553)
+    n =5'd10;
+else if(hs_cnt>553&&hs_cnt<=583)
+    n =5'd11;
+else if(hs_cnt>583&&hs_cnt<=613)
+    n =5'd12;
+else if(hs_cnt>613&&hs_cnt<=643)
+    n =5'd13;
+else if(hs_cnt>643&&hs_cnt<=673)
+    n =5'd14;
+else if(hs_cnt>673&&hs_cnt<=703)
+    n =5'd15;
+else
+    n = 0;
+end
+
+always@(*)begin
+if(vs_cnt>34&&vs_cnt<65)
+    m =5'd0;
+else if(vs_cnt>64&&vs_cnt<95)
+    m =5'd1;
+else if(vs_cnt>94&&vs_cnt<125)
+    m =5'd2;
+else if(vs_cnt>124&&vs_cnt<155)
+    m =5'd3;
+else if(vs_cnt>154&&vs_cnt<185)
+    m =5'd4;
+else if(vs_cnt>184&&vs_cnt<215)
+    m =5'd5;
+else if(vs_cnt>214&&vs_cnt<245)
+    m =5'd6;
+else if(vs_cnt>244&&vs_cnt<275)
+    m =5'd7;
+else if(vs_cnt>274&&vs_cnt<305)
+    m =5'd8;
+else if(vs_cnt>304&&vs_cnt<335)
+    m =5'd9;
+else if(vs_cnt>334&&vs_cnt<365)
+    m =5'd10;
+else if(vs_cnt>364&&vs_cnt<395)
+    m =5'd11;
+else if(vs_cnt>394&&vs_cnt<425)
+    m =5'd12;
+else if(vs_cnt>424&&vs_cnt<455)
+    m =5'd13;
+else if(vs_cnt>454&&vs_cnt<485)
+    m =5'd14;
+else if(vs_cnt>484&&vs_cnt<515)
+    m =5'd15;
+	 else
+	 m = 0;
+end
+
+
+	
+//Put the cursor in the picture and move it//
+always@(posedge sysclkout)begin
+x <= m*16 + n;
+xy <= mx*16 + nx;
+if(reset == 0) begin
+   if(Right_flag) begin
+     nx <= nx + 1;
+	  if(x == xy)
+      VGR <= 3'b001;
+      else 
+      VGR <= normal;
+	if(VGR == compare)begin
+	 if(c == 1)begin
+	 rout_F3 <= ~VGR[2]&valid;
+    gout_F3 <= ~VGR[1]&valid;
+    bout_F3 <= ~VGR[0]&valid;
+	 end
+	 else begin
+	 rout_F3 <= VGR[2]&valid;
+    gout_F3 <= VGR[1]&valid;
+    bout_F3 <= VGR[0]&valid;
+	 end
+	end
+end
+   else if(Left_flag)begin
+	nx <= nx -1;
+	if(x == xy)
+      VGR <= 3'b001;
+      else 
+      VGR <= normal;
+	if(VGR == compare)begin
+	 if(c == 1)begin
+	 rout_F3 <= ~VGR[2]&valid;
+    gout_F3 <= ~VGR[1]&valid;
+    bout_F3 <= ~VGR[0]&valid;
+	 end
+	 else begin
+	 rout_F3 <= VGR[2]&valid;
+    gout_F3 <= VGR[1]&valid;
+    bout_F3 <= VGR[0]&valid;
+	 end
+	end
+end
+   else if(Up_flag) begin
+     mx <= mx -1;
+	  if(x == xy)
+      VGR <= 3'b001;
+      else 
+      VGR <= normal;
+	if(VGR == compare)begin
+	 if(c == 1)begin
+	 rout_F3 <= ~VGR[2]&valid;
+    gout_F3 <= ~VGR[1]&valid;
+    bout_F3 <= ~VGR[0]&valid;
+	 end
+	 else begin
+	 rout_F3 <= VGR[2]&valid;
+    gout_F3 <= VGR[1]&valid;
+    bout_F3 <= VGR[0]&valid;
+	 end
+	end
+end
+   else if(Down_flag)begin
+     mx <= mx + 1;
+	  if(x == xy)
+      VGR <= 3'b001;
+      else 
+      VGR <= normal;
+	if(VGR == compare)begin
+	 if(c == 1)begin
+	 rout_F3 <= ~VGR[2]&valid;
+    gout_F3 <= ~VGR[1]&valid;
+    bout_F3 <= ~VGR[0]&valid;
+	 end
+	 else begin
+	 rout_F3 <= VGR[2]&valid;
+    gout_F3 <= VGR[1]&valid;
+    bout_F3 <= VGR[0]&valid;
+	 end
+	end
+end
+   else begin
+    if(x == xy)
+    VGR <= 3'b001;
+    else begin
+   VGR <= normal;
+   rout_F3 <= VGR[2]&valid;
+   gout_F3 <= VGR[1]&valid;
+   bout_F3 <= VGR[0]&valid;
+ end
+ end
+ end
+ else begin
+ VGR <= compare;
+ rout_F3 <= VGR[2]&valid;
+ gout_F3 <= VGR[1]&valid;
+ bout_F3 <= VGR[0]&valid;
+ end
+ end
+ endmodule
+ 
+ 
