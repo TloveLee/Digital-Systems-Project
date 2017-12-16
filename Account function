@@ -1,0 +1,34 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    02:29:20 04/28/2017 
+// Design Name: 
+// Module Name:    account 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module account(
+input wire sysclkout1,
+output reg count);
+reg [24:0]number =11'b0;
+always@(posedge sysclkout1)begin
+   number <= number + 1'b1;
+   if(number == 20000000) begin
+	number <= 0;
+   count <= 1;
+   end
+	else
+	count <= 0;
+ end
+endmodule
