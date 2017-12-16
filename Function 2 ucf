@@ -1,0 +1,22 @@
+NET "hs_F2" LOC = "F15" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "vs_F2" LOC = "F14" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "rout_F2" LOC = "H14" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "gout_F2" LOC = "H15" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "bout_F2" LOC = "G15" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+
+NET "sin" LOC = "L13" | IOSTANDARD = LVTTL | PULLUP ;
+NET "auto" LOC = "N17" | IOSTANDARD = LVTTL | PULLUP ;
+
+NET "sysclk" LOC = "C9" ;
+NET "sysclk" PERIOD = 20.0ns HIGH 40%;
+
+NET "sysclkout" PERIOD = 40.0ns HIGH 40%;
+
+NET "sysclkout" TNM_NET = "SysClk";
+TIMESPEC "TS_SysClk" = PERIOD "SysClk" 40 ns HIGH 40%;
+OFFSET = IN 10 ns VALID 10 ns BEFORE "SysClk" ; 
+
+NET "forward" LOC = "H13" | IOSTANDARD = LVTTL | PULLDOWN ;
+NET "backward" LOC = "D18" | IOSTANDARD = LVTTL | PULLDOWN ;
+NET "rotate" LOC = "V4" | IOSTANDARD = LVTTL | PULLDOWN ;
+NET "toggle" LOC = "K17" | IOSTANDARD = LVTTL | PULLDOWN ;
