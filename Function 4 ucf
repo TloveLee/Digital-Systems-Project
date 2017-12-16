@@ -1,0 +1,26 @@
+NET "h" LOC = "F15" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "v" LOC = "F14" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "r" LOC = "H14" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "g" LOC = "H15" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+NET "b" LOC = "G15" | IOSTANDARD = LVTTL | SLEW = FAST | DRIVE = 8 ;
+
+NET "Sswitch" LOC = "L13" | IOSTANDARD = LVTTL | PULLUP ;
+NET "redswitch" LOC = "N17" | IOSTANDARD = LVTTL | PULLUP ;
+NET "greenswitch" LOC = "H18" | IOSTANDARD = LVTTL | PULLUP ;
+NET "blueswitch" LOC = "L14" | IOSTANDARD = LVTTL | PULLUP ;
+
+NET "sysclk" LOC = "C9" ;
+NET "sysclk" PERIOD = 20.0ns HIGH 40%;
+
+//NET "sysclkout" PERIOD = 40.0ns HIGH 40%;
+
+//NET "sysclkout" TNM_NET = "SysClk";
+//TIMESPEC "TS_SysClk" = PERIOD "SysClk" 40 ns HIGH 40%;
+//OFFSET = IN 10 ns VALID 10 ns BEFORE "SysClk" ; 
+
+NET "East" LOC = "H13" | IOSTANDARD = LVTTL | PULLDOWN ;
+NET "West" LOC = "D18" | IOSTANDARD = LVTTL | PULLDOWN ;
+NET "North" LOC = "V4" | IOSTANDARD = LVTTL | PULLDOWN ;
+NET "South" LOC = "K17" | IOSTANDARD = LVTTL | PULLDOWN ;
+NET "switchmode" LOC = "V16" | IOSTANDARD = LVTTL | PULLDOWN ;
+
