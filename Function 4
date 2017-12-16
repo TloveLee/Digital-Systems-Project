@@ -1,0 +1,102 @@
+module Function4(
+input wire switchmode,
+input wire sysclk,
+input wire redswitch,
+input wire greenswitch,
+input wire blueswitch,
+input wire Sswitch,
+input wire North,
+input wire East,
+input wire West,
+input wire South,
+output reg r,
+output reg g,
+output reg b,
+output reg h,
+output reg v
+//output reg x
+);
+reg [1:0]number = 2'b01;
+//reg sysclkout=0;
+wire switchmode_flag;
+wire rout_F1;
+wire gout_F1;
+wire bout_F1;
+wire hs_F1;
+wire vs_F1;
+wire rout_F2;
+wire gout_F2;
+wire bout_F2;
+wire hs_F2;
+wire vs_F2;
+wire rout_F3;
+wire gout_F3;
+wire bout_F3;
+wire hs_F3;
+wire vs_F3;
+//wire x_F2;
+//wire x_F3;
+
+
+//always @(posedge sysclk)
+//begin
+//sysclkout = ~sysclkout;
+//end
+
+
+Function1 Function1(
+.sysclk(sysclk),  .sin(Sswitch), .hs_F1(hs_F1), .vs_F1(vs_F1), .rout_F1(rout_F1), .gout_F1(gout_F1),
+.bout_F1(bout_F1), .set(North), .rin(redswitch), .bin(blueswitch), .gin(greenswitch)); 
+
+
+
+Function2 Function2(
+.sin(Sswitch), .auto(redswitch), .rotate(North), .forward(East), .backward(West), 
+.toggle(South), .sysclk(sysclk), .hs_F2(hs_F2), .vs_F2(vs_F2), .rout_F2(rout_F2), 
+.gout_F2(gout_F2), .bout_F2(bout_F2));//, .x_F2(x_F2));
+
+Function3 Function3(
+.sin(Sswitch), .hs_F3(hs_F3), .vs_F3(vs_F3), .rout_F3(rout_F3), .gout_F3(gout_F3), .bout_F3(bout_F3),
+.sysclk(sysclk), .Right(East), .Left(West), .Up(North), .Down(South));//, .x_F3(x_F3));
+
+
+
+debouncer_switchmode debouncer_switchmode
+(.switchmode(switchmode),.sysclk(sysclk),.switchmode_flag(switchmode_flag));
+
+
+
+always@(posedge sysclk)
+begin
+if(switchmode_flag) begin
+      number <= number + 1'b1;
+	  end
+	  
+case(number)
+2'b01: begin
+r <= rout_F1;
+g <= gout_F1;
+b <= bout_F1;
+h <= hs_F1;
+v <= vs_F1;
+end
+2'b10: begin
+r <= rout_F2;
+g <= gout_F2;
+b <= bout_F2;
+h <= hs_F2;
+v <= vs_F2;
+//x <= x_F2;
+end
+2'b11: begin
+r <= rout_F3;
+g <= gout_F3;
+b <= bout_F3;
+h <= hs_F3;
+v <= vs_F3;
+//x <= x_F3;
+end
+default: number <= 2'b01;
+endcase
+end
+endmodule
